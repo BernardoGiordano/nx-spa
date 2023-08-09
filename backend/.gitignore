@@ -1,0 +1,6 @@
+.idea
+.vscode
+romfs/webapp/*
+!romfs/webapp/.gitkeep
+out
+build

@@ -1,0 +1,7 @@
+---
+Language: Cpp
+BasedOnStyle: Google
+AlignAfterOpenBracket: Align
+UseTab: Never
+
+...
