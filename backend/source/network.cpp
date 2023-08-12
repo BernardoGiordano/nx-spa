@@ -90,5 +90,6 @@ void networkExit() {
   shouldExitNetworkLoop = true;
   threadWaitForExit(&networkThread);
   threadClose(&networkThread);
+  mg_mgr_free(&mgr);
   socketExit();
 }
