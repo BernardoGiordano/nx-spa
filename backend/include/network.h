@@ -27,7 +27,28 @@
 #ifndef BACKEND_NETWORK_H
 #define BACKEND_NETWORK_H
 
-bool networkInit();
-void networkExit();
+#include <memory>
+#include <atomic>
+#include <thread>
+
+#define xstr(s) str(s)
+#define str(s) #s
+
+#define NETWORK_PORT 8080
+#define NETWORK_PORT_STR xstr(NETWORK_PORT)
+
+struct Network {
+  struct MongooseImpl;
+
+  Network();
+  ~Network();
+
+private:
+  void server_loop();
+
+  std::unique_ptr<MongooseImpl> pimpl;
+  std::atomic_flag stop_flag;
+  std::thread server_thread;
+};
 
 #endif  // BACKEND_NETWORK_H

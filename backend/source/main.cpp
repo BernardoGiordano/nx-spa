@@ -24,27 +24,52 @@
  *         reasonable ways as different from the original version.
  */
 
-#include <stdio.h>
-#include <switch.h>
+#include <stdexcept> // std::exception
+#include <cstdlib> // EXIT_FAILURE
+#include <cstdio> // printf
 
+#include <switch.h> // libnx
+
+// our code
 #include "bootstrap.h"
+#include "network.h"
 
 int main(int argc, char* argv[]) {
-  if (!appInit()) {
-    return 1;
-  }
+  try {
+    AppServices app;
+    Network net;
 
-  WebCommonConfig config;
-  Result rc = webPageCreate(&config, "http://0.0.0.0:8080");
-  if (R_SUCCEEDED(rc)) {
-    webConfigSetWhitelist(&config, "^http*");
-    webConfigSetFooter(&config, false);
-    webConfigSetFooterFixedKind(&config, WebFooterFixedKind_Hidden);
-    webConfigSetTouchEnabledOnContents(&config, true);
-    webConfigSetJsExtension(&config, true);
-    rc = webConfigShow(&config, nullptr);
+    WebCommonConfig config;
+    Result rc = webPageCreate(&config, "http://0.0.0.0:" NETWORK_PORT_STR);
+    if (R_SUCCEEDED(rc)) {
+      webConfigSetWhitelist(&config, "^http*");
+      webConfigSetFooter(&config, false);
+      webConfigSetFooterFixedKind(&config, WebFooterFixedKind_Hidden);
+      webConfigSetTouchEnabledOnContents(&config, true);
+      webConfigSetJsExtension(&config, true);
+      rc = webConfigShow(&config, nullptr);
+    }
   }
+  catch(const std::exception& exc) {
+    consoleInit(NULL);
+    padConfigureInput(1, HidNpadStyleSet_NpadStandard);
+    PadState pad;
+    padInitializeDefault(&pad);
+    printf("A nx-spa error occured. Press Y to exit.\n\n");
+    printf("Error: '%s'\n", exc.what());
 
-  appExit();
-  return 0;
+    while(appletMainLoop())
+    {
+      padUpdate(&pad);
+
+      const u32 kDown = padGetButtonsDown(&pad);
+      if (kDown & HidNpadButton_Y)
+        break;
+
+      consoleUpdate(NULL);
+    }
+
+    consoleExit(NULL);
+    return EXIT_FAILURE;
+  }
 }

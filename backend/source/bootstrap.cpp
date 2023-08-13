@@ -25,19 +25,55 @@
  */
 
 #include <switch.h>
-#include "network.h"
+#include <stdexcept>
+#include <cinttypes>
+#include "bootstrap.h"
 
-bool appInit() {
-  romfsInit();
-  
-  if (!networkInit()) {
-    return false;
+/*
+ * when using regular network:
+ *  - known to work when internet connection available
+ *  - known to not work when in airplane mode
+ * when using ldn (local) network:
+ *  - ?
+ */
+// comment out to prevent ldn usage
+#define USE_LOCALNET
+
+AppServices::AppServices() {
+  char buf[128] = {0};
+  Result res = 0;
+
+  res = romfsInit();
+  if(R_FAILED(res))
+  {
+    snprintf(buf, sizeof(buf), "romfsInit failure: %" PRIx32 "\n", res);
+    throw std::runtime_error(std::string(buf));
   }
 
-  return true;
+  res = socketInitializeDefault();
+  if(R_FAILED(res))
+  {
+    snprintf(buf, sizeof(buf), "socketInitializeDefault failure: %" PRIx32 "\n", res);
+    romfsExit();
+    throw std::runtime_error(std::string(buf));
+  }
+
+#ifdef USE_LOCALNET
+  res = ldnInitialize(LdnServiceType_User);
+  if(R_FAILED(res))
+  {
+    snprintf(buf, sizeof(buf), "ldnInitialize failure: %" PRIx32 "\n", res);
+    socketExit();
+    romfsExit();
+    throw std::runtime_error(std::string(buf));
+  }
+#endif
 }
 
-void appExit() {
-  networkExit();
+AppServices::~AppServices() {
+#ifdef USE_LOCALNET
+  ldnExit();
+#endif
+  socketExit();
   romfsExit();
 }

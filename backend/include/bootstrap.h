@@ -27,7 +27,9 @@
 #ifndef BACKEND_BOOTSTRAP_H
 #define BACKEND_BOOTSTRAP_H
 
-bool appInit();
-void appExit();
+struct AppServices {
+  AppServices();
+  ~AppServices();
+};
 
 #endif  // BACKEND_BOOTSTRAP_H
