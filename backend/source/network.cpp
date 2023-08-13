@@ -44,14 +44,30 @@ static void webServerThreadFunc(void) {
   }
 }
 
+static void handle_sum_call(struct mg_connection *nc, struct http_message *hm) {
+  char n1[100], n2[100];
+  double result;
+
+  /* Get variables */
+  mg_get_http_var(&hm->query_string, "n1", n1, sizeof(n1));
+  mg_get_http_var(&hm->query_string, "n2", n2, sizeof(n2));
+
+  /* Send headers */
+  mg_printf(nc, "%s", "HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n");
+
+  /* Compute the result and send it back as a JSON object */
+  result = strtod(n1, NULL) + strtod(n2, NULL);
+  mg_printf_http_chunk(nc, "{ \"result\": %lf }", result);
+  mg_send_http_chunk(nc, "", 0); /* Send empty chunk, the end of response */
+}
+
 static void ev_handler(struct mg_connection* nc, int ev, void* ev_data) {
   struct http_message* hm = (struct http_message*)ev_data;
 
   switch (ev) {
     case MG_EV_HTTP_REQUEST:
-      if (mg_vcmp(&hm->uri, "/test") == 0) {
-        // FIXME: your test code here
-        // handle_test(nc, hm);
+      if (mg_vcmp(&hm->uri, "/sum") == 0) {
+        handle_sum_call(nc, hm);
       } else {
         mg_serve_http(nc, hm, httpServerOpts);
       }
@@ -65,7 +81,7 @@ static void initWebServer(void) {
   mg_mgr_init(&mgr, NULL);
   nc = mg_bind(&mgr, httpServerPort, ev_handler);
   mg_set_protocol_http_websocket(nc);
-  httpServerOpts.document_root = "romfs:/webapp/";
+  httpServerOpts.document_root = "romfs:/webapp";
 }
 
 bool networkInit() {

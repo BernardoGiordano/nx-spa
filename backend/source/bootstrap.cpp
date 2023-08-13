@@ -25,22 +25,14 @@
  */
 
 #include <switch.h>
-#include <sys/stat.h>
-
-#include "io.h"
 #include "network.h"
 
 bool appInit() {
+  romfsInit();
+  
   if (!networkInit()) {
     return false;
   }
-
-  romfsInit();
-  createDirectoryRecursively(
-      "sdmc:/atmosphere/hbl_html/html-document/.htdocs/nx-spa/webapp/");
-  copyDirectoryRecursively(
-      "romfs:/webapp/",
-      "sdmc:/atmosphere/hbl_html/html-document/.htdocs/nx-spa/webapp/");
 
   return true;
 }

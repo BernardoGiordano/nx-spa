@@ -34,10 +34,10 @@ int main(int argc, char* argv[]) {
     return 1;
   }
 
-  WebCommonConfig config = {};
-  Result rc = webOfflineCreate(&config, WebDocumentKind_OfflineHtmlPage, 0,
-                               ".htdocs/nx-spa/webapp/index.html");
+  WebCommonConfig config;
+  Result rc = webPageCreate(&config, "http://0.0.0.0:8080");
   if (R_SUCCEEDED(rc)) {
+    webConfigSetWhitelist(&config, "^http*");
     webConfigSetFooter(&config, false);
     webConfigSetFooterFixedKind(&config, WebFooterFixedKind_Hidden);
     webConfigSetTouchEnabledOnContents(&config, true);

@@ -24,4 +24,4 @@ make
 
 ## Credits
 
-Code mostly borrowed from [BernardoGiordano/Checkpoint](https://github.com/BernardoGiordano/Checkpoint) with few lines coming from [J-D-K/JKSV](https://github.com/J-D-K/JKSV).
+Code mostly borrowed from [BernardoGiordano/Checkpoint](https://github.com/BernardoGiordano/Checkpoint).
