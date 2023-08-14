@@ -36,14 +36,15 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <inttypes.h>
 
 #define INVALID_SOCKET ((int)(~0))
 
 typedef int sock_t;
 typedef struct stat cs_stat_t;
 #define DIRSEP '/'
-#define SIZE_T_FMT "lu"
-#define INT64_FMT "li"
+#define SIZE_T_FMT "zd"
+#define INT64_FMT PRId64
 #define to64(x) strtoll(x, NULL, 10)
 #define closesocket(x) close(x)
 

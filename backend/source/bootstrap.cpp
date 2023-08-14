@@ -25,19 +25,32 @@
  */
 
 #include <switch.h>
-#include "network.h"
+#include <stdexcept>
+#include <cinttypes>
+#include <cstdio>
+#include "bootstrap.h"
 
-bool appInit() {
-  romfsInit();
-  
-  if (!networkInit()) {
-    return false;
+AppServices::AppServices() {
+  char buf[128] = {0};
+  Result res = 0;
+
+  res = romfsInit();
+  if(R_FAILED(res))
+  {
+    snprintf(buf, sizeof(buf), "romfsInit failure: %" PRIx32 "\n", res);
+    throw std::runtime_error(std::string(buf));
   }
 
-  return true;
+  res = socketInitializeDefault();
+  if(R_FAILED(res))
+  {
+    snprintf(buf, sizeof(buf), "socketInitializeDefault failure: %" PRIx32 "\n", res);
+    romfsExit();
+    throw std::runtime_error(std::string(buf));
+  }
 }
 
-void appExit() {
-  networkExit();
+AppServices::~AppServices() {
+  socketExit();
   romfsExit();
 }

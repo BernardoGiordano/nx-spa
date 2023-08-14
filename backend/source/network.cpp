@@ -24,25 +24,32 @@
  *         reasonable ways as different from the original version.
  */
 
+#include <stdexcept>
+#include <cstdlib>
+#include "network.h"
+
 #include <switch.h>
 extern "C" {
 #include "mongoose.h"
 }
 
-static bool shouldExitNetworkLoop = false;
-static struct mg_mgr mgr;
-static struct mg_connection* nc;
-static struct mg_serve_http_opts httpServerOpts;
-static const char* httpServerPort = "8080";
-static Thread networkThread;
+struct Network::MongooseImpl {
+  struct mg_mgr mgr;
+  struct mg_connection* nc;
+  struct mg_serve_http_opts httpServerOpts;
 
-static void pollServer(void) { mg_mgr_poll(&mgr, 1000 / 60); }
+  static void event_handler(struct mg_connection* nc, int ev, void* ev_data);
 
-static void webServerThreadFunc(void) {
-  while (!shouldExitNetworkLoop) {
-    pollServer();
+  MongooseImpl() {
+    mg_mgr_init(&mgr, this); // makes our data available through mgr->user_data (after an appropriate cast)
+    nc = mg_bind(&mgr, NETWORK_PORT_STR, &Network::MongooseImpl::event_handler);
+    mg_set_protocol_http_websocket(nc);
+    httpServerOpts.document_root = "romfs:/webapp";
   }
-}
+  ~MongooseImpl() {
+    mg_mgr_free(&mgr);
+  }
+};
 
 static void handle_sum_call(struct mg_connection *nc, struct http_message *hm) {
   char n1[100], n2[100];
@@ -61,51 +68,42 @@ static void handle_sum_call(struct mg_connection *nc, struct http_message *hm) {
   mg_send_http_chunk(nc, "", 0); /* Send empty chunk, the end of response */
 }
 
-static void ev_handler(struct mg_connection* nc, int ev, void* ev_data) {
-  struct http_message* hm = (struct http_message*)ev_data;
+void Network::MongooseImpl::event_handler(struct mg_connection* nc, int ev, void* ev_data) {
+    struct http_message* hm = (struct http_message*)ev_data;
+    auto& self = *(Network::MongooseImpl*)(nc->mgr->user_data);
 
-  switch (ev) {
-    case MG_EV_HTTP_REQUEST:
-      if (mg_vcmp(&hm->uri, "/sum") == 0) {
-        handle_sum_call(nc, hm);
-      } else {
-        mg_serve_http(nc, hm, httpServerOpts);
-      }
-      break;
-    default:
-      break;
+    switch (ev) {
+      case MG_EV_HTTP_REQUEST:
+        if (mg_vcmp(&hm->uri, "/sum") == 0) {
+          handle_sum_call(nc, hm);
+        } else {
+          mg_serve_http(nc, hm, self.httpServerOpts);
+        }
+        break;
+      default:
+        break;
+    }
+  }
+
+void Network::server_loop()
+{
+  // keep going until flag is set
+  while (!stop_flag.test()) {
+    mg_mgr_poll(&pimpl->mgr, 1000 / 50);
   }
 }
 
-static void initWebServer(void) {
-  mg_mgr_init(&mgr, NULL);
-  nc = mg_bind(&mgr, httpServerPort, ev_handler);
-  mg_set_protocol_http_websocket(nc);
-  httpServerOpts.document_root = "romfs:/webapp";
+Network::Network()
+  // imo dirty, but is an usual idiom to hide implementation
+  // didn't want to include mongoose in the header
+  : pimpl{std::make_unique<MongooseImpl>()}
+  // initialize as clear, the thread expects it to be cleared to keep running
+  , stop_flag{}
+{
+  server_thread = std::thread(&Network::server_loop, this);
 }
-
-bool networkInit() {
-  Result res;
-  if ((res = socketInitializeDefault()) == 0) {
-    nxlinkStdio();
-  } else {
-    shouldExitNetworkLoop = true;
-    return false;
-  }
-
-  initWebServer();
-
-  threadCreate(&networkThread, (ThreadFunc)webServerThreadFunc, nullptr,
-               nullptr, 16 * 1000, 0x2C, -2);
-  threadStart(&networkThread);
-
-  return true;
-}
-
-void networkExit() {
-  shouldExitNetworkLoop = true;
-  threadWaitForExit(&networkThread);
-  threadClose(&networkThread);
-  mg_mgr_free(&mgr);
-  socketExit();
+Network::~Network()
+{
+  stop_flag.test_and_set(); // tell the thread to stop
+  server_thread.join(); // wait for the thread to complete
 }
