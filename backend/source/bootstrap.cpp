@@ -27,17 +27,8 @@
 #include <switch.h>
 #include <stdexcept>
 #include <cinttypes>
+#include <cstdio>
 #include "bootstrap.h"
-
-/*
- * when using regular network:
- *  - known to work when internet connection available
- *  - known to not work when in airplane mode
- * when using ldn (local) network:
- *  - ?
- */
-// comment out to prevent ldn usage
-#define USE_LOCALNET
 
 AppServices::AppServices() {
   char buf[128] = {0};
@@ -57,23 +48,9 @@ AppServices::AppServices() {
     romfsExit();
     throw std::runtime_error(std::string(buf));
   }
-
-#ifdef USE_LOCALNET
-  res = ldnInitialize(LdnServiceType_User);
-  if(R_FAILED(res))
-  {
-    snprintf(buf, sizeof(buf), "ldnInitialize failure: %" PRIx32 "\n", res);
-    socketExit();
-    romfsExit();
-    throw std::runtime_error(std::string(buf));
-  }
-#endif
 }
 
 AppServices::~AppServices() {
-#ifdef USE_LOCALNET
-  ldnExit();
-#endif
   socketExit();
   romfsExit();
 }

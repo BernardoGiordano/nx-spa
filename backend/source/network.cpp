@@ -25,6 +25,7 @@
  */
 
 #include <stdexcept>
+#include <cstdlib>
 #include "network.h"
 
 #include <switch.h>
