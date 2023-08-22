@@ -21,4 +21,7 @@ clean:
 deploy:
 	@cd backend && nxlink -s out/nx-spa.nro
 
-.PHONY: clean all angular vue deploy
+format:
+	@cd backend && make format
+
+.PHONY: clean all angular vue deploy format
