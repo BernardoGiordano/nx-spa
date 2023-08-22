@@ -25,11 +25,12 @@
  */
 
 #include <switch.h>
+
 #include "network.h"
 
 bool appInit() {
   romfsInit();
-  
+
   if (!networkInit()) {
     return false;
   }
