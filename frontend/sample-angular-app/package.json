@@ -4,7 +4,8 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
-    "build": "ng build",
+    "build": "ng build --configuration switch && node scripts/prepare-switch-build.mjs",
+    "build:production": "ng build --configuration production",
     "watch": "ng build --watch --configuration development",
     "test": "ng test"
   },
@@ -26,7 +27,10 @@
     "@angular-devkit/build-angular": "^14.2.12",
     "@angular/cli": "~14.2.12",
     "@angular/compiler-cli": "^14.2.0",
+    "@babel/core": "7.18.10",
+    "@babel/preset-env": "7.18.10",
     "@types/jasmine": "~4.0.0",
+    "acorn": "8.10.0",
     "jasmine-core": "~4.3.0",
     "karma": "~6.4.0",
     "karma-chrome-launcher": "~3.1.0",

@@ -1,6 +1,6 @@
 /*
  *   This file is part of nx-spa
- *   Copyright (C) 2023 Bernardo Giordano
+ *   Copyright (C) 2023-2026 Bernardo Giordano
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -24,27 +24,12 @@
  *         reasonable ways as different from the original version.
  */
 
-#ifndef BACKEND_MG_LOCALS_H
-#define BACKEND_MG_LOCALS_H
+#pragma once
 
-#include <arpa/inet.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <netinet/in.h>
-#include <stdlib.h>
-#include <sys/socket.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <unistd.h>
+#include <switch.h>
 
-#define INVALID_SOCKET ((int)(~0))
-
-typedef int sock_t;
-typedef struct stat cs_stat_t;
-#define DIRSEP '/'
-#define SIZE_T_FMT "lu"
-#define INT64_FMT "li"
-#define to64(x) strtoll(x, NULL, 10)
-#define closesocket(x) close(x)
-
-#endif  // BACKEND_MG_LOCALS_H
+/**
+ * Stages the frontend embedded in the NRO into Atmosphere's HtmlDocument
+ * redirect, then runs it in the offline web applet.
+ */
+Result webAppRun();

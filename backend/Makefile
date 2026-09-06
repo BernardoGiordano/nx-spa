@@ -31,14 +31,15 @@ include $(DEVKITPRO)/libnx/switch_rules
 #     - <libnx folder>/default_icon.jpg
 #---------------------------------------------------------------------------------
 APP_TITLE	:=	nx-spa
+APP_VERSION	:=	2.0.0
 TARGET		:=	$(subst $e ,_,$(notdir $(APP_TITLE)))
 OUTDIR		:=	out
 BUILD		:=	build
 FORMATSOURCES	:= source
-SOURCES		:=	$(FORMATSOURCES) 3rd-party/source
+SOURCES		:=	$(FORMATSOURCES)
 DATA		:=	data
 FORMATINCLUDES	:= include
-INCLUDES	:=	$(FORMATINCLUDES) 3rd-party/include
+INCLUDES	:=	$(FORMATINCLUDES)
 EXEFS_SRC	:=	exefs_src
 ROMFS		:=	romfs
 
@@ -48,9 +49,7 @@ ROMFS		:=	romfs
 ARCH	:=	-march=armv8-a+crc+crypto -mtune=cortex-a57 -mtp=soft -fPIE
 
 CFLAGS	:=	-g -Wall -O2 -ffunction-sections \
-			$(ARCH) $(DEFINES) \
-			-DCS_PLATFORM=CS_P_CUSTOM \
-			-DMG_ENABLE_FILESYSTEM
+			$(ARCH) $(DEFINES)
 
 CFLAGS	+=	$(INCLUDE) -D__SWITCH__
 
@@ -114,6 +113,7 @@ export INCLUDE	:=	$(foreach dir,$(INCLUDES),-I$(CURDIR)/$(dir)) \
 export LIBPATHS	:=	$(foreach dir,$(LIBDIRS),-L$(dir)/lib)
 
 export BUILD_EXEFS_SRC := $(TOPDIR)/$(EXEFS_SRC)
+export ROMFSDEPS := $(shell find $(TOPDIR)/$(ROMFS) -type f 2>/dev/null)
 
 ifeq ($(strip $(ICON)),)
 	icons := $(wildcard *.jpg)
@@ -180,6 +180,8 @@ $(OUTPUT).nro	:	$(OUTPUT).elf $(OUTPUT).nacp
 else
 $(OUTPUT).nro	:	$(OUTPUT).elf
 endif
+
+$(OUTPUT).nro	:	$(ROMFSDEPS)
 
 $(OUTPUT).elf	:	$(OFILES)
 

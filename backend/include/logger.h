@@ -1,6 +1,6 @@
 /*
  *   This file is part of nx-spa
- *   Copyright (C) 2023 Bernardo Giordano
+ *   Copyright (C) 2026 Bernardo Giordano
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -14,20 +14,24 @@
  *
  *   You should have received a copy of the GNU General Public License
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- *   Additional Terms 7.b and 7.c of GPLv3 apply to this file:
- *       * Requiring preservation of specified reasonable legal notices or
- *         author attributions in that material or in the Appropriate Legal
- *         Notices displayed by works containing it.
- *       * Prohibiting misrepresentation of the origin of that material,
- *         or requiring that modified versions of such material be marked in
- *         reasonable ways as different from the original version.
  */
 
-#ifndef BACKEND_NETWORK_H
-#define BACKEND_NETWORK_H
+#pragma once
 
-bool networkInit();
-void networkExit();
+/**
+ * Connects stderr to the nxlink host when the NRO was launched by nxlink.
+ * Normal SD-card launches remain network-free.
+ */
+void loggerInit();
+void loggerExit();
 
-#endif  // BACKEND_NETWORK_H
+/// Whether an nxlink host accepted the diagnostics connection.
+bool loggerIsActive();
+
+void loggerWrite(const char* level, const char* format, ...)
+    __attribute__((format(printf, 2, 3)));
+
+#define LOG_DEBUG(...) loggerWrite("DEBUG", __VA_ARGS__)
+#define LOG_INFO(...) loggerWrite("INFO", __VA_ARGS__)
+#define LOG_WARN(...) loggerWrite("WARN", __VA_ARGS__)
+#define LOG_ERROR(...) loggerWrite("ERROR", __VA_ARGS__)

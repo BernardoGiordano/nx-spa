@@ -1,6 +1,6 @@
 /*
  *   This file is part of nx-spa
- *   Copyright (C) 2023 Bernardo Giordano
+ *   Copyright (C) 2023-2026 Bernardo Giordano
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -24,10 +24,9 @@
  *         reasonable ways as different from the original version.
  */
 
-#ifndef BACKEND_BOOTSTRAP_H
-#define BACKEND_BOOTSTRAP_H
+#pragma once
 
-bool appInit();
+#include <switch.h>
+
+Result appInit();
 void appExit();
-
-#endif  // BACKEND_BOOTSTRAP_H

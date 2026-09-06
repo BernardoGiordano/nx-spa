@@ -2,12 +2,48 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8">
-    <link rel="icon" href="/favicon.ico">
+    <link rel="icon" href="./favicon.ico">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vite App</title>
+    <title>nx-spa</title>
+    <style>
+      html, body { min-height: 100%; margin: 0; background: #060c17; color: #f5f8ff; font-family: sans-serif; }
+      #nx-boot { box-sizing: border-box; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 48px; text-align: center; }
+      #nx-boot h1 { margin: 0 0 18px; font-size: 64px; }
+      #nx-boot p { max-width: 760px; margin: 0; color: #9eacc3; font-size: 20px; line-height: 1.5; }
+    </style>
   </head>
   <body>
-    <div id="app"></div>
+    <div id="app">
+      <main id="nx-boot">
+        <h1>nx-spa</h1>
+        <p id="nx-boot-message">Starting the Vue frontend…</p>
+      </main>
+    </div>
+    <script>
+      (function () {
+        var message = document.getElementById('nx-boot-message');
+        window.nxSpaBootError = false;
+        function showError(text) {
+          window.nxSpaBootError = true;
+          if (document.getElementById('nx-boot') && message) {
+            message.textContent = text;
+          }
+        }
+        window.addEventListener('error', function (event) {
+          var source = event.filename || (event.target && (event.target.src || event.target.href));
+          showError('Frontend error: ' + (event.message || source || 'a resource failed to load'));
+        }, true);
+        window.addEventListener('unhandledrejection', function (event) {
+          var reason = event.reason;
+          showError('Frontend rejection: ' + (reason && (reason.stack || reason.message) || String(reason)));
+        });
+        window.setTimeout(function () {
+          if (!window.nxSpaBootError && document.getElementById('nx-boot') && message) {
+            message.textContent = 'Vue did not start. Browser: ' + navigator.userAgent;
+          }
+        }, 5000);
+      }());
+    </script>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

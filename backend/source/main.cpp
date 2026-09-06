@@ -1,6 +1,6 @@
 /*
  *   This file is part of nx-spa
- *   Copyright (C) 2023 Bernardo Giordano
+ *   Copyright (C) 2023-2026 Bernardo Giordano
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -28,23 +28,63 @@
 #include <switch.h>
 
 #include "bootstrap.h"
+#include "logger.h"
+#include "web_app.h"
+
+namespace {
+void showError(Result rc) {
+  consoleInit(nullptr);
+  printf("nx-spa could not start.\n\n");
+  printf("Result: 0x%08X\n\n", rc);
+
+  if (appletGetAppletType() != AppletType_Application) {
+    printf("The Switch web applet requires Application mode.\n");
+    printf(
+        "Open hbmenu by holding R while launching a game, then run nx-spa.\n");
+  } else {
+    printf(
+        "Check that Atmosphere is current and that the SD card is writable.\n");
+    printf("nx-spa stages its offline UI under:\n");
+    printf("sdmc:/atmosphere/hbl_html/html-document/nx-spa.htdocs\n");
+  }
+
+  printf("\nPress + to exit.\n");
+  consoleUpdate(nullptr);
+
+  padConfigureInput(1, HidNpadStyleSet_NpadStandard);
+  PadState pad;
+  padInitializeDefault(&pad);
+  while (appletMainLoop()) {
+    padUpdate(&pad);
+    if ((padGetButtonsDown(&pad) & HidNpadButton_Plus) != 0) {
+      break;
+    }
+    svcSleepThread(16'000'000);
+  }
+  consoleExit(nullptr);
+}
+}  // namespace
 
 int main(int argc, char* argv[]) {
-  if (!appInit()) {
+  (void)argc;
+  (void)argv;
+
+  Result rc = appInit();
+  if (R_FAILED(rc)) {
+    LOG_ERROR("initialization failed: 0x%08X", rc);
+    showError(rc);
+    loggerExit();
     return 1;
   }
 
-  WebCommonConfig config;
-  Result rc = webPageCreate(&config, "http://0.0.0.0:8080");
-  if (R_SUCCEEDED(rc)) {
-    webConfigSetWhitelist(&config, "^http*");
-    webConfigSetFooter(&config, false);
-    webConfigSetFooterFixedKind(&config, WebFooterFixedKind_Hidden);
-    webConfigSetTouchEnabledOnContents(&config, true);
-    webConfigSetJsExtension(&config, true);
-    rc = webConfigShow(&config, nullptr);
+  rc = webAppRun();
+  if (R_FAILED(rc)) {
+    LOG_ERROR("web app failed: 0x%08X", rc);
+    showError(rc);
+  } else {
+    LOG_INFO("web app exited normally");
   }
 
   appExit();
-  return 0;
+  return R_SUCCEEDED(rc) ? 0 : 1;
 }

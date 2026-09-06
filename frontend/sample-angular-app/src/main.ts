@@ -9,4 +9,12 @@ if (environment.production) {
 }
 
 platformBrowserDynamic().bootstrapModule(AppModule)
-  .catch(err => console.error(err));
+  .catch(error => {
+    window.nxSpaBootError = true;
+    const message = document.getElementById('nx-boot-message');
+    if (message) {
+      const detail = error instanceof Error ? error.stack ?? error.message : String(error);
+      message.textContent = `Angular bootstrap error: ${detail}`;
+    }
+    console.error(error);
+  });

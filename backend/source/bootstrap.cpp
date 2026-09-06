@@ -1,6 +1,6 @@
 /*
  *   This file is part of nx-spa
- *   Copyright (C) 2023 Bernardo Giordano
+ *   Copyright (C) 2023-2026 Bernardo Giordano
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -24,21 +24,28 @@
  *         reasonable ways as different from the original version.
  */
 
-#include <switch.h>
+#include "bootstrap.h"
 
-#include "network.h"
+#include "logger.h"
 
-bool appInit() {
-  romfsInit();
+Result appInit() {
+  loggerInit();
+  LOG_INFO("nx-spa starting (HOS %u.%u.%u, Atmosphere=%s)",
+           HOSVER_MAJOR(hosversionGet()), HOSVER_MINOR(hosversionGet()),
+           HOSVER_MICRO(hosversionGet()),
+           hosversionIsAtmosphere() ? "yes" : "no");
 
-  if (!networkInit()) {
-    return false;
+  const Result rc = romfsInit();
+  if (R_FAILED(rc)) {
+    LOG_ERROR("romfsInit failed: 0x%08X", rc);
+  } else {
+    LOG_INFO("RomFS mounted");
   }
-
-  return true;
+  return rc;
 }
 
 void appExit() {
-  networkExit();
+  LOG_INFO("unmounting RomFS");
   romfsExit();
+  loggerExit();
 }
